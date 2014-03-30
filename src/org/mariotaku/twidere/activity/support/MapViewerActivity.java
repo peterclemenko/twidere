@@ -28,15 +28,15 @@ import android.view.MenuItem;
 
 import org.mariotaku.twidere.Constants;
 import org.mariotaku.twidere.R;
+import org.mariotaku.twidere.fragment.iface.IMapFragment;
 import org.mariotaku.twidere.fragment.support.NativeMapFragment;
-import org.mariotaku.twidere.util.MapInterface;
 import org.mariotaku.twidere.util.ThemeUtils;
 
 public class MapViewerActivity extends TwidereSwipeBackActivity implements Constants {
 
 	@Override
 	public int getThemeResourceId() {
-		return ThemeUtils.getThemeResource(this);
+		return ThemeUtils.getViewerThemeResource(this);
 	}
 
 	@Override
@@ -54,10 +54,10 @@ public class MapViewerActivity extends TwidereSwipeBackActivity implements Const
 			}
 			case MENU_CENTER: {
 				final Fragment fragment = getSupportFragmentManager().findFragmentById(android.R.id.content);
-				if (!(fragment instanceof MapInterface)) {
+				if (!(fragment instanceof IMapFragment)) {
 					break;
 				}
-				((MapInterface) fragment).center();
+				((IMapFragment) fragment).center();
 				break;
 			}
 		}
@@ -92,4 +92,5 @@ public class MapViewerActivity extends TwidereSwipeBackActivity implements Const
 		final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		ft.replace(android.R.id.content, fragment).commit();
 	}
+
 }

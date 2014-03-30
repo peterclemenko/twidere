@@ -28,7 +28,7 @@ import android.view.ViewGroup;
 
 import org.mariotaku.twidere.Constants;
 import org.mariotaku.twidere.R;
-import org.mariotaku.twidere.util.MapInterface;
+import org.mariotaku.twidere.fragment.iface.IMapFragment;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.api.IMapView;
@@ -42,7 +42,7 @@ import org.osmdroid.views.overlay.OverlayItem;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NativeMapFragment extends BaseSupportFragment implements MapInterface, Constants {
+public class NativeMapFragment extends BaseSupportFragment implements IMapFragment, Constants {
 
 	private static final int MAPVIEW_ID = 0x70000001;
 
