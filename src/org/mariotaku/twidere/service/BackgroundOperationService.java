@@ -73,7 +73,7 @@ import org.mariotaku.twidere.util.MediaUploaderInterface;
 import org.mariotaku.twidere.util.MessagesManager;
 import org.mariotaku.twidere.util.StatusShortenerInterface;
 import org.mariotaku.twidere.util.TwidereValidator;
-import org.mariotaku.twidere.util.TwitterErrorCodes;
+import org.mariotaku.twidere.util.StatusCodeMessageUtils;
 import org.mariotaku.twidere.util.Utils;
 import org.mariotaku.twidere.util.io.ContentLengthInputStream;
 import org.mariotaku.twidere.util.io.ContentLengthInputStream.ReadListener;
@@ -292,7 +292,7 @@ public class BackgroundOperationService extends IntentService implements Constan
 				// If the status is a duplicate, there's no need to save it to
 				// drafts.
 				if (exception instanceof TwitterException
-						&& ((TwitterException) exception).getErrorCode() == TwitterErrorCodes.STATUS_IS_DUPLICATE) {
+						&& ((TwitterException) exception).getErrorCode() == StatusCodeMessageUtils.STATUS_IS_DUPLICATE) {
 					showErrorMessage(getString(R.string.status_is_duplicate), false);
 				} else {
 					saveDrafts(item, failed_account_ids);

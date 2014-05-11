@@ -1201,7 +1201,7 @@ public class AsyncTwitterWrapper extends TwitterWrapper {
 		private boolean isMessageNotFound(final Exception e) {
 			if (!(e instanceof TwitterException)) return false;
 			final TwitterException te = (TwitterException) e;
-			return te.getErrorCode() == TwitterErrorCodes.PAGE_NOT_FOUND
+			return te.getErrorCode() == StatusCodeMessageUtils.PAGE_NOT_FOUND
 					|| te.getStatusCode() == HttpResponseCode.NOT_FOUND;
 		}
 	}

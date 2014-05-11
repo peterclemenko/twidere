@@ -45,7 +45,6 @@ import org.mariotaku.twidere.adapter.iface.IStatusesAdapter;
 import org.mariotaku.twidere.app.TwidereApplication;
 import org.mariotaku.twidere.model.ParcelableStatus;
 import org.mariotaku.twidere.model.ParcelableUserMention;
-import org.mariotaku.twidere.util.HtmlEscapeHelper;
 import org.mariotaku.twidere.util.ImageLoaderWrapper;
 import org.mariotaku.twidere.util.ImageLoadingHandler;
 import org.mariotaku.twidere.util.MultiSelectManager;
@@ -205,8 +204,7 @@ public class ParcelableStatusesAdapter extends BaseArrayAdapter<ParcelableStatus
 				if (mHighlightKeywords == null || mHighlightKeywords.length == 0) {
 					holder.text.setText(status.text_unescaped);
 				} else {
-					holder.text.setText(Utils.getKeywordBoldedText(HtmlEscapeHelper.escape(status.text_unescaped),
-							mHighlightKeywords));
+					holder.text.setText(Utils.getKeywordBoldedText(status.text_unescaped, mHighlightKeywords));
 				}
 			}
 
