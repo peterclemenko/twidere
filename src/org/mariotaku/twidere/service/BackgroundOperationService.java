@@ -37,6 +37,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Parcelable;
@@ -71,9 +72,9 @@ import org.mariotaku.twidere.util.ContentValuesCreator;
 import org.mariotaku.twidere.util.ListUtils;
 import org.mariotaku.twidere.util.MediaUploaderInterface;
 import org.mariotaku.twidere.util.MessagesManager;
+import org.mariotaku.twidere.util.StatusCodeMessageUtils;
 import org.mariotaku.twidere.util.StatusShortenerInterface;
 import org.mariotaku.twidere.util.TwidereValidator;
-import org.mariotaku.twidere.util.StatusCodeMessageUtils;
 import org.mariotaku.twidere.util.Utils;
 import org.mariotaku.twidere.util.io.ContentLengthInputStream;
 import org.mariotaku.twidere.util.io.ContentLengthInputStream.ReadListener;
@@ -423,13 +424,16 @@ public class BackgroundOperationService extends IntentService implements Constan
 					status.setLocation(ParcelableLocation.toGeoLocation(statusUpdate.location));
 				}
 				if (!mUseUploader && imageFile != null && imageFile.exists()) {
+					final BitmapFactory.Options o = new BitmapFactory.Options();
+					o.inJustDecodeBounds = true;
+					BitmapFactory.decodeFile(imagePath, o);
 					try {
 						final ContentLengthInputStream is = new ContentLengthInputStream(imageFile);
 						is.setReadListener(new StatusMediaUploadListener(this, mNotificationManager, builder,
 								statusUpdate));
-						status.setMedia(imageFile.getName(), is);
+						status.setMedia(imageFile.getName(), is, o.outMimeType);
 					} catch (final FileNotFoundException e) {
-						status.setMedia(imageFile);
+						status.setMedia(imageFile, o.outMimeType);
 					}
 				}
 				status.setPossiblySensitive(statusUpdate.is_possibly_sensitive);
