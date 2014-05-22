@@ -52,6 +52,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -76,6 +77,7 @@ import org.mariotaku.twidere.util.ClipboardUtils;
 import org.mariotaku.twidere.util.ParseUtils;
 import org.mariotaku.twidere.util.ThemeUtils;
 import org.mariotaku.twidere.util.TwidereValidator;
+import org.mariotaku.twidere.util.Utils;
 import org.mariotaku.twidere.util.accessor.ViewAccessor;
 import org.mariotaku.twidere.view.StatusTextCountView;
 
@@ -313,6 +315,12 @@ public class DirectMessagesConversationFragment extends BaseSupportListFragment 
 	public void onResume() {
 		super.onResume();
 		configBaseCardAdapter(getActivity(), mAdapter);
+		final boolean displayImagePreview = mPreferences.getBoolean(KEY_DISPLAY_IMAGE_PREVIEW, false);
+		final String previewScaleType = Utils.getNonEmptyString(mPreferences, KEY_IMAGE_PREVIEW_SCALE_TYPE,
+				ScaleType.CENTER_CROP.name());
+		mAdapter.setDisplayImagePreview(displayImagePreview);
+		mAdapter.setImagePreviewScaleType(previewScaleType);
+		mAdapter.notifyDataSetChanged();
 	}
 
 	@Override

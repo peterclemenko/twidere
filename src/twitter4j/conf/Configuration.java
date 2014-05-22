@@ -56,6 +56,10 @@ public interface Configuration extends HttpClientConfiguration, HttpClientWrappe
 
 	String getSigningRestBaseURL();
 
+	String getSigningUploadBaseURL();
+
+	String getUploadBaseURL();
+
 	boolean isDebugEnabled();
 
 	boolean isIncludeEntitiesEnabled();

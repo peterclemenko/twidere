@@ -109,7 +109,7 @@ public interface DirectMessagesResources {
 	 *      direct_messages/new | Twitter Developers</a>
 	 * @since Twitter4j 2.1.0
 	 */
-	DirectMessage sendDirectMessage(long userId, String text) throws TwitterException;
+	DirectMessage sendDirectMessage(long userId, String text, long mediaId) throws TwitterException;
 
 	/**
 	 * Sends a new direct message to the specified user from the authenticating
@@ -126,7 +126,7 @@ public interface DirectMessagesResources {
 	 *      href="https://dev.twitter.com/docs/api/1.1/post/direct_messages/new">POST
 	 *      direct_messages/new | Twitter Developers</a>
 	 */
-	DirectMessage sendDirectMessage(String screenName, String text) throws TwitterException;
+	DirectMessage sendDirectMessage(String screenName, String text, long mediaId) throws TwitterException;
 
 	/**
 	 * Returns a single direct message, specified by an id parameter. <br>
@@ -144,4 +144,8 @@ public interface DirectMessagesResources {
 	 * @since Twitter4J 2.1.9
 	 */
 	DirectMessage showDirectMessage(long id) throws TwitterException;
+
+	DirectMessage sendDirectMessage(long userId, String text) throws TwitterException;
+
+	DirectMessage sendDirectMessage(String screenName, String text) throws TwitterException;
 }
