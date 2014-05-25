@@ -345,6 +345,9 @@
 				<data
 					android:host="search"
 					android:scheme="twidere"/>
+				<data
+					android:host="mutes_users"
+					android:scheme="twidere"/>
 			</intent-filter>
 		</activity>
 		<activity

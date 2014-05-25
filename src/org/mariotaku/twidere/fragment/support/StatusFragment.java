@@ -640,7 +640,7 @@ public class StatusFragment extends ParcelableStatusesListFragment implements On
 		if (status == null) return;
 		// UCD
 		ProfilingUtil.profile(getActivity(), mStatus.account_id, "Large image click, " + mStatus.id + ", " + media.url);
-		openImageDirectly(getActivity(), media.url);
+		openImageDirectly(getActivity(), status.account_id, media.url);
 	}
 
 	@Override

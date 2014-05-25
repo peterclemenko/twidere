@@ -159,8 +159,8 @@
   <string name="unblock">Blockierung aufheben</string>
   <string name="report_for_spam">Spam melden</string>
   <string name="mute_user">Benutzer stummschalten</string>
-  <string name="user_muted">Benutzer zur Filterliste hinzugefügt. Tweets dieses Benutzers erscheinen nicht in der Zeitleiste oder bei Erwähnungen.</string>
-  <string name="users_muted">Benutzer zur Filterliste hinzugefügt. Tweets dieser Benutzer erscheinen nicht in der Zeitleiste oder bei Erwähnungen.</string>
+  <string name="message_user_muted">Benutzer zur Filterliste hinzugefügt. Tweets dieses Benutzers erscheinen nicht in der Zeitleiste oder bei Erwähnungen.</string>
+  <string name="message_users_muted">Benutzer zur Filterliste hinzugefügt. Tweets dieser Benutzer erscheinen nicht in der Zeitleiste oder bei Erwähnungen.</string>
   <string name="inbox">Eingang</string>
   <string name="load_images">Bilder laden</string>
   <string name="other_settings">Weitere Einstellungen</string>

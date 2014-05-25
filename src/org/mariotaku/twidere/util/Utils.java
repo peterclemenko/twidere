@@ -128,6 +128,7 @@ import org.mariotaku.twidere.app.TwidereApplication;
 import org.mariotaku.twidere.content.iface.ITwidereContextWrapper;
 import org.mariotaku.twidere.fragment.support.DirectMessagesConversationFragment;
 import org.mariotaku.twidere.fragment.support.IncomingFriendshipsFragment;
+import org.mariotaku.twidere.fragment.support.MutesUsersListFragment;
 import org.mariotaku.twidere.fragment.support.SavedSearchesListFragment;
 import org.mariotaku.twidere.fragment.support.SearchFragment;
 import org.mariotaku.twidere.fragment.support.SensitiveContentWarningDialogFragment;
@@ -324,6 +325,7 @@ public final class Utils implements Constants, TwitterConstants {
 		LINK_HANDLER_URI_MATCHER.addURI(AUTHORITY_STATUS_FAVORITERS, null, LINK_ID_STATUS_FAVORITERS);
 		LINK_HANDLER_URI_MATCHER.addURI(AUTHORITY_STATUS_REPLIES, null, LINK_ID_STATUS_REPLIES);
 		LINK_HANDLER_URI_MATCHER.addURI(AUTHORITY_SEARCH, null, LINK_ID_SEARCH);
+		LINK_HANDLER_URI_MATCHER.addURI(AUTHORITY_MUTES_USERS, null, LINK_ID_MUTES_USERS);
 
 	}
 	private static LongSparseArray<Integer> sAccountColors = new LongSparseArray<Integer>();
@@ -758,6 +760,10 @@ public final class Utils implements Constants, TwitterConstants {
 			}
 			case LINK_ID_USER_BLOCKS: {
 				fragment = new UserBlocksListFragment();
+				break;
+			}
+			case LINK_ID_MUTES_USERS: {
+				fragment = new MutesUsersListFragment();
 				break;
 			}
 			case LINK_ID_DIRECT_MESSAGES_CONVERSATION: {
@@ -1995,7 +2001,7 @@ public final class Utils implements Constants, TwitterConstants {
 	}
 
 	public static HttpResponse getRedirectedHttpResponse(final HttpClientWrapper client, final String url,
-			String signUrl, Authorization auth) throws TwitterException {
+			final String signUrl, final Authorization auth) throws TwitterException {
 		if (url == null) return null;
 		final ArrayList<String> urls = new ArrayList<String>();
 		urls.add(url);
@@ -2226,7 +2232,7 @@ public final class Utils implements Constants, TwitterConstants {
 						cb.setOAuthConsumerKey(TWITTER_CONSUMER_KEY);
 						cb.setOAuthConsumerSecret(TWITTER_CONSUMER_SECRET);
 					}
-					OAuthAuthorization auth = new OAuthAuthorization(cb.build());
+					final OAuthAuthorization auth = new OAuthAuthorization(cb.build());
 					final String token = c.getString(c.getColumnIndexOrThrow(Accounts.OAUTH_TOKEN));
 					final String tokenSecret = c.getString(c.getColumnIndexOrThrow(Accounts.OAUTH_TOKEN_SECRET));
 					auth.setOAuthAccessToken(new AccessToken(token, tokenSecret));
@@ -2775,7 +2781,8 @@ public final class Utils implements Constants, TwitterConstants {
 		SwipebackActivityUtils.startSwipebackActivity(activity, intent);
 	}
 
-	public static void openImage(final Context context, final String uri, final boolean isPossiblySensitive) {
+	public static void openImage(final Context context, final long accountId, final String uri,
+			final boolean isPossiblySensitive) {
 		if (context == null || uri == null) return;
 		final SharedPreferences prefs = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
 		if (context instanceof FragmentActivity && isPossiblySensitive
@@ -2784,18 +2791,20 @@ public final class Utils implements Constants, TwitterConstants {
 			final FragmentManager fm = activity.getSupportFragmentManager();
 			final DialogFragment fragment = new SensitiveContentWarningDialogFragment();
 			final Bundle args = new Bundle();
+			args.putLong(EXTRA_ACCOUNT_ID, accountId);
 			args.putParcelable(EXTRA_URI, Uri.parse(uri));
 			fragment.setArguments(args);
 			fragment.show(fm, "sensitive_content_warning");
 		} else {
-			openImageDirectly(context, uri);
+			openImageDirectly(context, accountId, uri);
 		}
 	}
 
-	public static void openImageDirectly(final Context context, final String uri) {
+	public static void openImageDirectly(final Context context, final long accountId, final String uri) {
 		if (context == null || uri == null) return;
 		final Intent intent = new Intent(INTENT_ACTION_VIEW_IMAGE);
 		intent.setData(Uri.parse(uri));
+		intent.putExtra(EXTRA_ACCOUNT_ID, accountId);
 		intent.setClass(context, ImageViewerGLActivity.class);
 		if (context instanceof Activity) {
 			SwipebackActivityUtils.startSwipebackActivity((Activity) context, intent);
@@ -2828,6 +2837,16 @@ public final class Utils implements Constants, TwitterConstants {
 		} else {
 			context.startActivity(intent);
 		}
+	}
+
+	public static void openMutesUsers(final Activity activity, final long account_id) {
+		if (activity == null) return;
+		final Uri.Builder builder = new Uri.Builder();
+		builder.scheme(SCHEME_TWIDERE);
+		builder.authority(AUTHORITY_MUTES_USERS);
+		builder.appendQueryParameter(QUERY_PARAM_ACCOUNT_ID, String.valueOf(account_id));
+		final Intent intent = new Intent(Intent.ACTION_VIEW, builder.build());
+		SwipebackActivityUtils.startSwipebackActivity(activity, intent);
 	}
 
 	public static void openSavedSearches(final Activity activity, final long account_id) {
