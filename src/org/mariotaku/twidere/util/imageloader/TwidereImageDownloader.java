@@ -20,27 +20,24 @@
 package org.mariotaku.twidere.util.imageloader;
 
 import static org.mariotaku.twidere.util.TwidereLinkify.PATTERN_TWITTER_PROFILE_IMAGES;
-import static org.mariotaku.twidere.util.TwidereLinkify.TWITTER_PROFILE_IMAGES_AVAILABLE_SIZES;
-import static org.mariotaku.twidere.util.Utils.generateBrowserUserAgent;
 import static org.mariotaku.twidere.util.Utils.getImageLoaderHttpClient;
-import static org.mariotaku.twidere.util.Utils.getProxy;
+import static org.mariotaku.twidere.util.Utils.getNormalTwitterProfileImage;
 import static org.mariotaku.twidere.util.Utils.getRedirectedHttpResponse;
+import static org.mariotaku.twidere.util.Utils.getTwitterAuthorization;
+import static org.mariotaku.twidere.util.Utils.getTwitterProfileImageOfSize;
 import static org.mariotaku.twidere.util.Utils.replaceLast;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.text.TextUtils;
 
-import com.nostra13.universalimageloader.core.download.ImageDownloader;
+import com.nostra13.universalimageloader.core.assist.ContentLengthInputStream;
+import com.nostra13.universalimageloader.core.download.BaseImageDownloader;
 
 import org.mariotaku.twidere.Constants;
 import org.mariotaku.twidere.R;
 import org.mariotaku.twidere.model.ParcelableMedia;
 import org.mariotaku.twidere.util.MediaPreviewUtils;
-import org.mariotaku.twidere.util.Utils;
-import org.mariotaku.twidere.util.io.ContentLengthInputStream;
 
 import twitter4j.TwitterException;
 import twitter4j.auth.Authorization;
@@ -49,83 +46,51 @@ import twitter4j.http.HttpResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Proxy;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
-public class TwidereImageDownloader implements ImageDownloader, Constants {
-
-	private static final HostnameVerifier ALLOW_ALL_HOSTNAME_VERIFIER = new AllowAllHostnameVerifier();
-	private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[] { new TrustAllX509TrustManager() };
-	private static final SSLSocketFactory IGNORE_ERROR_SSL_FACTORY;
-
-	static {
-		System.setProperty("http.keepAlive", "false");
-		SSLSocketFactory factory = null;
-		try {
-			final SSLContext sc = SSLContext.getInstance("TLS");
-			sc.init(null, TRUST_ALL_CERTS, new SecureRandom());
-			factory = sc.getSocketFactory();
-		} catch (final KeyManagementException e) {
-		} catch (final NoSuchAlgorithmException e) {
-		}
-		IGNORE_ERROR_SSL_FACTORY = factory;
-	}
+public class TwidereImageDownloader extends BaseImageDownloader implements Constants {
 
 	private final Context mContext;
 	private final SharedPreferences mPreferences;
-	private final ContentResolver mResolver;
 	private HttpClientWrapper mClient;
-	private Proxy mProxy;
 	private boolean mFastImageLoading;
-	private String mUserAgent;
 	private final boolean mFullImage;
 	private final String mTwitterProfileImageSize;
 
 	public TwidereImageDownloader(final Context context, final boolean fullImage) {
+		super(context);
 		mContext = context;
 		mPreferences = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
-		mResolver = context.getContentResolver();
 		mFullImage = fullImage;
-		mTwitterProfileImageSize = String.format("_%s", context.getString(R.string.profile_image_size));
+		mTwitterProfileImageSize = context.getString(R.string.profile_image_size);
 		reloadConnectivitySettings();
 	}
 
+	public void reloadConnectivitySettings() {
+		mClient = getImageLoaderHttpClient(mContext);
+		mFastImageLoading = mContext.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).getBoolean(
+				KEY_FAST_IMAGE_LOADING, true);
+	}
+
 	@Override
-	public InputStream getStream(final String uriString, final Object extras) throws IOException {
+	protected InputStream getStreamFromNetwork(final String uriString, final Object extras) throws IOException {
 		if (uriString == null) return null;
-		final Uri uri = Uri.parse(uriString);
-		final String scheme = uri.getScheme();
-		if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(scheme) || ContentResolver.SCHEME_CONTENT.equals(scheme)
-				|| ContentResolver.SCHEME_FILE.equals(scheme)) return mResolver.openInputStream(uri);
 		final ParcelableMedia media = MediaPreviewUtils.getAllAvailableImage(uriString, mFullImage, mFullImage
 				|| !mFastImageLoading ? mClient : null);
 		try {
 			final String mediaUrl = media != null ? media.media_url : uriString;
-			if (PATTERN_TWITTER_PROFILE_IMAGES.matcher(uriString).matches()) {
-				final String replaced = replaceLast(mediaUrl, "_" + TWITTER_PROFILE_IMAGES_AVAILABLE_SIZES,
-						mTwitterProfileImageSize);
-				return getStreamFromNetwork(replaced, extras);
+			if (isTwitterProfileImage(uriString)) {
+				final String replaced = getTwitterProfileImageOfSize(mediaUrl, mTwitterProfileImageSize);
+				return getStreamFromNetworkInternal(replaced, extras);
 			} else
-				return getStreamFromNetwork(mediaUrl, extras);
+				return getStreamFromNetworkInternal(mediaUrl, extras);
 		} catch (final TwitterException e) {
 			final int statusCode = e.getStatusCode();
-			if (statusCode != -1 && PATTERN_TWITTER_PROFILE_IMAGES.matcher(uriString).matches()
-					&& !uriString.contains("_normal.")) {
+			if (statusCode != -1 && isTwitterProfileImage(uriString) && !uriString.contains("_normal.")) {
 				try {
-					return getStreamFromNetwork(Utils.getNormalTwitterProfileImage(uriString), extras);
+					return getStreamFromNetworkInternal(getNormalTwitterProfileImage(uriString), extras);
 				} catch (final TwitterException e2) {
 
 				}
@@ -135,19 +100,11 @@ public class TwidereImageDownloader implements ImageDownloader, Constants {
 		}
 	}
 
-	public void reloadConnectivitySettings() {
-		mClient = getImageLoaderHttpClient(mContext);
-		mFastImageLoading = mContext.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE).getBoolean(
-				KEY_FAST_IMAGE_LOADING, true);
-		mProxy = getProxy(mContext);
-		mUserAgent = generateBrowserUserAgent();
-	}
-
 	private String getReplacedTwitterHost(final String host) {
 		if (host == null || !host.endsWith("twitter.com")) return host;
 		final String jtapiHostname = mPreferences.getString(KEY_JTAPI_HOSTNAME, null);
 		if (TextUtils.isEmpty(jtapiHostname)) return host;
-		return Utils.replaceLast(host, "twitter\\.com", jtapiHostname);
+		return replaceLast(host, "twitter\\.com", jtapiHostname);
 	}
 
 	private String getReplacedUri(final String uri, final String scheme, final String host) {
@@ -156,13 +113,13 @@ public class TwidereImageDownloader implements ImageDownloader, Constants {
 		return uri.replaceFirst(target, String.format("%s://%s", scheme, replacedHost));
 	}
 
-	private ContentLengthInputStream getStreamFromNetwork(final String uriString, final Object extras)
+	private ContentLengthInputStream getStreamFromNetworkInternal(final String uriString, final Object extras)
 			throws IOException, TwitterException {
 		final URL url = new URL(uriString);
 		final Authorization auth;
 		if (isOAuthRequired(url) && extras instanceof AccountExtra) {
 			final AccountExtra accountExtra = (AccountExtra) extras;
-			auth = Utils.getTwitterAuthorization(mContext, accountExtra.account_id);
+			auth = getTwitterAuthorization(mContext, accountExtra.account_id);
 		} else {
 			auth = null;
 		}
@@ -176,25 +133,9 @@ public class TwidereImageDownloader implements ImageDownloader, Constants {
 		return "ton.twitter.com".equalsIgnoreCase(url.getHost());
 	}
 
-	private static final class AllowAllHostnameVerifier implements HostnameVerifier {
-		@Override
-		public boolean verify(final String hostname, final SSLSession session) {
-			return true;
-		}
+	private boolean isTwitterProfileImage(final String uriString) {
+		if (TextUtils.isEmpty(uriString)) return false;
+		return PATTERN_TWITTER_PROFILE_IMAGES.matcher(uriString).matches();
 	}
 
-	private static final class TrustAllX509TrustManager implements X509TrustManager {
-		@Override
-		public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
-		}
-
-		@Override
-		public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
-		}
-
-		@Override
-		public X509Certificate[] getAcceptedIssuers() {
-			return new X509Certificate[] {};
-		}
-	}
 }

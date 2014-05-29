@@ -32,6 +32,7 @@ import static org.mariotaku.twidere.util.Utils.openUserProfile;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.Html;
@@ -44,6 +45,7 @@ import android.widget.ImageView.ScaleType;
 import org.mariotaku.twidere.R;
 import org.mariotaku.twidere.adapter.iface.IStatusesAdapter;
 import org.mariotaku.twidere.app.TwidereApplication;
+import org.mariotaku.twidere.model.ParcelableMedia;
 import org.mariotaku.twidere.model.ParcelableStatus;
 import org.mariotaku.twidere.model.ParcelableUserMention;
 import org.mariotaku.twidere.provider.TweetStore.Statuses;
@@ -138,13 +140,14 @@ public class CursorStatusesAdapter extends BaseCursorAdapter implements IStatuse
 			final String name = cursor.getString(mIndices.user_name);
 			final String inReplyToName = cursor.getString(mIndices.in_reply_to_user_name);
 			final String inReplyToScreenName = cursor.getString(mIndices.in_reply_to_user_screen_name);
-			final String firstMedia = cursor.getString(mIndices.first_media);
+			final ParcelableMedia[] medias = ParcelableMedia.fromJSONString(cursor.getString(mIndices.medias));
+			final String firstMedia = medias != null && medias.length > 0 ? medias[0].media_url : null;
 
 			// Tweet type (favorite/location/media)
 			final boolean isFavorite = cursor.getShort(mIndices.is_favorite) == 1;
 			final boolean hasLocation = !TextUtils.isEmpty(cursor.getString(mIndices.location));
 			final boolean possiblySensitive = cursor.getInt(mIndices.is_possibly_sensitive) == 1;
-			final boolean hasMedia = firstMedia != null;
+			final boolean hasMedia = medias != null && medias.length > 0;
 
 			// User type (protected/verified)
 			final boolean isVerified = cursor.getShort(mIndices.is_verified) == 1;
@@ -215,7 +218,7 @@ public class CursorStatusesAdapter extends BaseCursorAdapter implements IStatuse
 			}
 			final boolean hasPreview = mDisplayImagePreview && hasMedia;
 			holder.image_preview_container.setVisibility(hasPreview ? View.VISIBLE : View.GONE);
-			if (hasPreview && firstMedia != null) {
+			if (hasPreview && firstMedia != null && medias != null) {
 				if (mImagePreviewScaleType != null) {
 					holder.image_preview.setScaleType(mImagePreviewScaleType);
 				}
@@ -227,6 +230,9 @@ public class CursorStatusesAdapter extends BaseCursorAdapter implements IStatuse
 					holder.image_preview.setBackgroundResource(0);
 					mImageLoader.displayPreviewImage(holder.image_preview, firstMedia, mImageLoadingHandler);
 				}
+				final Resources res = mContext.getResources();
+				final int count = medias.length;
+				holder.image_preview_count.setText(res.getQuantityString(R.plurals.N_medias, count, count));
 				holder.image_preview.setTag(position);
 			}
 		}

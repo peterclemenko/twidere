@@ -96,6 +96,7 @@ import org.mariotaku.twidere.task.AsyncTask;
 import org.mariotaku.twidere.util.ArrayUtils;
 import org.mariotaku.twidere.util.AsyncTwitterWrapper;
 import org.mariotaku.twidere.util.FlymeUtils;
+import org.mariotaku.twidere.util.HotKeyHandler;
 import org.mariotaku.twidere.util.MathUtils;
 import org.mariotaku.twidere.util.MultiSelectEventHandler;
 import org.mariotaku.twidere.util.SwipebackActivityUtils;
@@ -145,6 +146,7 @@ public class HomeActivity extends BaseSupportActivity implements OnClickListener
 	private NotificationManager mNotificationManager;
 
 	private MultiSelectEventHandler mMultiSelectHandler;
+	private HotKeyHandler mHotKeyHandler;
 
 	private ActionBar mActionBar;
 	private SupportTabsAdapter mPagerAdapter;
@@ -269,6 +271,9 @@ public class HomeActivity extends BaseSupportActivity implements OnClickListener
 					return true;
 				}
 				break;
+			}
+			default: {
+				if (mHotKeyHandler.handleKey(keyCode, event)) return true;
 			}
 		}
 		return super.onKeyUp(keyCode, event);
@@ -470,6 +475,7 @@ public class HomeActivity extends BaseSupportActivity implements OnClickListener
 		mTwitterWrapper = getTwitterWrapper();
 		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		mMultiSelectHandler = new MultiSelectEventHandler(this);
+		mHotKeyHandler = new HotKeyHandler(this);
 		mMultiSelectHandler.dispatchOnCreate();
 		final Resources res = getResources();
 		final boolean displayIcon = res.getBoolean(R.bool.home_display_icon);

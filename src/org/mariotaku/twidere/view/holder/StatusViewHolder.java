@@ -46,6 +46,7 @@ public class StatusViewHolder extends CardViewHolder {
 	public final TextView name, screen_name, reply_retweet_status;
 	public final ShortTimeView time;
 	public final TextView text;
+	public final TextView image_preview_count;
 
 	private final float density;
 	private final boolean is_rtl;
@@ -70,6 +71,7 @@ public class StatusViewHolder extends CardViewHolder {
 		text = (TextView) findViewById(R.id.text);
 		time = (ShortTimeView) findViewById(R.id.time);
 		reply_retweet_status = (TextView) findViewById(R.id.reply_retweet_status);
+		image_preview_count = (TextView) findViewById(R.id.image_preview_count);
 		show_as_gap = content.isGap();
 		is_rtl = Utils.isRTL(context);
 		density = context.getResources().getDisplayMetrics().density;
@@ -163,6 +165,7 @@ public class StatusViewHolder extends CardViewHolder {
 		screen_name.setTextSize(text_size * 0.75f);
 		time.setTextSize(text_size * 0.65f);
 		reply_retweet_status.setTextSize(text_size * 0.65f);
+		image_preview_count.setTextSize(text_size * 1.25f);
 		return true;
 	}
 

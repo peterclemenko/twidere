@@ -182,8 +182,8 @@ import org.mariotaku.twidere.provider.TweetStore.Tabs;
 import org.mariotaku.twidere.provider.TweetStore.UnreadCounts;
 import org.mariotaku.twidere.service.RefreshService;
 import org.mariotaku.twidere.util.content.ContentResolverUtils;
-import org.mariotaku.twidere.util.net.ApacheHttpClientFactory;
 import org.mariotaku.twidere.util.net.TwidereHostResolverFactory;
+import org.mariotaku.twidere.util.net.TwidereHttpClientFactory;
 
 import twitter4j.DirectMessage;
 import twitter4j.EntitySupport;
@@ -1492,10 +1492,7 @@ public final class Utils implements Constants, TwitterConstants {
 	}
 
 	public static String getBiggerTwitterProfileImage(final String url) {
-		if (url == null) return null;
-		if (PATTERN_TWITTER_PROFILE_IMAGES.matcher(url).matches())
-			return replaceLast(url, "_" + TWITTER_PROFILE_IMAGES_AVAILABLE_SIZES, "_bigger");
-		return url;
+		return getTwitterProfileImageOfSize(url, "bigger");
 	}
 
 	public static Bitmap getBitmap(final Drawable drawable) {
@@ -1666,13 +1663,13 @@ public final class Utils implements Constants, TwitterConstants {
 		return list.getChildAt(0).getTop();
 	}
 
-	public static HttpClientWrapper getHttpClient(final int timeout_millis, final boolean ignore_ssl_error,
-			final Proxy proxy, final HostAddressResolverFactory resolverFactory, final String user_agent,
-			final boolean twitter_client_header) {
+	public static HttpClientWrapper getHttpClient(final Context context, final int timeoutMillis,
+			final boolean ignoreSslError, final Proxy proxy, final HostAddressResolverFactory resolverFactory,
+			final String userAgent, final boolean twitterClientHeader) {
 		final ConfigurationBuilder cb = new ConfigurationBuilder();
-		cb.setHttpConnectionTimeout(timeout_millis);
-		cb.setIgnoreSSLError(ignore_ssl_error);
-		cb.setIncludeTwitterClientHeader(twitter_client_header);
+		cb.setHttpConnectionTimeout(timeoutMillis);
+		cb.setIgnoreSSLError(ignoreSslError);
+		cb.setIncludeTwitterClientHeader(twitterClientHeader);
 		if (proxy != null && !Proxy.NO_PROXY.equals(proxy)) {
 			final SocketAddress address = proxy.address();
 			if (address instanceof InetSocketAddress) {
@@ -1681,22 +1678,22 @@ public final class Utils implements Constants, TwitterConstants {
 			}
 		}
 		cb.setHostAddressResolverFactory(resolverFactory);
-		if (user_agent != null) {
-			cb.setHttpUserAgent(user_agent);
+		if (userAgent != null) {
+			cb.setHttpUserAgent(userAgent);
 		}
-		// cb.setHttpClientImplementation(HttpClientImpl.class);
+		cb.setHttpClientFactory(new TwidereHttpClientFactory(context));
 		return new HttpClientWrapper(cb.build());
 	}
 
 	public static HttpClientWrapper getImageLoaderHttpClient(final Context context) {
 		if (context == null) return null;
 		final SharedPreferences prefs = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
-		final int timeout_millis = prefs.getInt(KEY_CONNECTION_TIMEOUT, 10000) * 1000;
+		final int timeoutMillis = prefs.getInt(KEY_CONNECTION_TIMEOUT, 10000) * 1000;
 		final Proxy proxy = getProxy(context);
 		final String userAgent = generateBrowserUserAgent();
 		final HostAddressResolverFactory resolverFactory = new TwidereHostResolverFactory(
 				TwidereApplication.getInstance(context));
-		return getHttpClient(timeout_millis, true, proxy, resolverFactory, userAgent, false);
+		return getHttpClient(context, timeoutMillis, true, proxy, resolverFactory, userAgent, false);
 	}
 
 	public static String getImageMimeType(final File image) {
@@ -1889,10 +1886,7 @@ public final class Utils implements Constants, TwitterConstants {
 	}
 
 	public static String getNormalTwitterProfileImage(final String url) {
-		if (url == null) return null;
-		if (PATTERN_TWITTER_PROFILE_IMAGES.matcher(url).matches())
-			return replaceLast(url, "_" + TWITTER_PROFILE_IMAGES_AVAILABLE_SIZES, "_normal");
-		return url;
+		return getTwitterProfileImageOfSize(url, "normal");
 	}
 
 	public static Uri getNotificationUri(final int tableId, final Uri def) {
@@ -1994,10 +1988,7 @@ public final class Utils implements Constants, TwitterConstants {
 	}
 
 	public static String getReasonablySmallTwitterProfileImage(final String url) {
-		if (url == null) return null;
-		if (PATTERN_TWITTER_PROFILE_IMAGES.matcher(url).matches())
-			return replaceLast(url, "_" + TWITTER_PROFILE_IMAGES_AVAILABLE_SIZES, "_reasonably_small");
-		return url;
+		return getTwitterProfileImageOfSize(url, "reasonably_small");
 	}
 
 	public static HttpResponse getRedirectedHttpResponse(final HttpClientWrapper client, final String url,
@@ -2325,7 +2316,7 @@ public final class Utils implements Constants, TwitterConstants {
 			final ConfigurationBuilder cb = new ConfigurationBuilder();
 			cb.setHostAddressResolverFactory(new TwidereHostResolverFactory(app));
 			if (apacheHttp) {
-				cb.setHttpClientFactory(new ApacheHttpClientFactory());
+				cb.setHttpClientFactory(new TwidereHttpClientFactory(app));
 			}
 			cb.setHttpConnectionTimeout(connection_timeout);
 			setUserAgent(context, cb);
@@ -2400,6 +2391,13 @@ public final class Utils implements Constants, TwitterConstants {
 		} finally {
 			c.close();
 		}
+	}
+
+	public static String getTwitterProfileImageOfSize(final String url, final String size) {
+		if (url == null) return null;
+		if (PATTERN_TWITTER_PROFILE_IMAGES.matcher(url).matches())
+			return replaceLast(url, "_" + TWITTER_PROFILE_IMAGES_AVAILABLE_SIZES, String.format("_%s", size));
+		return url;
 	}
 
 	public static String getUnescapedStatusString(final String string) {

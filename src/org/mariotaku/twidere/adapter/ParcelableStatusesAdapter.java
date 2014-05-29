@@ -32,6 +32,7 @@ import static org.mariotaku.twidere.util.Utils.openUserProfile;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.Html;
 import android.text.TextUtils;
@@ -275,6 +276,9 @@ public class ParcelableStatusesAdapter extends BaseArrayAdapter<ParcelableStatus
 					holder.image_preview.setBackgroundResource(0);
 					loader.displayPreviewImage(holder.image_preview, status.first_media, mImageLoadingHandler);
 				}
+				final Resources res = mContext.getResources();
+				final int count = status.medias.length;
+				holder.image_preview_count.setText(res.getQuantityString(R.plurals.N_medias, count, count));
 				holder.image_preview.setTag(position);
 			}
 		}

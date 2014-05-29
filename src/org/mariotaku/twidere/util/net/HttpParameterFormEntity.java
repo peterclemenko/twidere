@@ -11,7 +11,7 @@ import java.io.UnsupportedEncodingException;
 public class HttpParameterFormEntity extends StringEntityHC4 {
 
 	public static final ContentType CONTENT_TYPE = ContentType.APPLICATION_FORM_URLENCODED.withCharset(Consts.UTF_8);
-	
+
 	public HttpParameterFormEntity(final HttpParameter[] params) throws UnsupportedEncodingException {
 		super(HttpParameter.encodeParameters(params), CONTENT_TYPE);
 	}

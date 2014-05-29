@@ -26,5 +26,6 @@ public interface IDirectMessagesAdapter extends IBaseCardAdapter {
 	public ParcelableDirectMessage findItem(long id);
 
 	public void setDisplayImagePreview(boolean display);
+
 	public void setImagePreviewScaleType(String scaleType);
 }
